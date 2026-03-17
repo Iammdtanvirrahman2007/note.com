@@ -24,10 +24,14 @@ import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https
 
 // 🔴 এখানে তোমার Firebase config বসাও
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_ID"
+  apiKey: "AIzaSyBTDfFNbtXgf6I2OfwS_f6nCXLym2eSzc8",
+  authDomain: "note-competition.firebaseapp.com",
+  projectId: "note-competition",
+  storageBucket: "note-competition.firebasestorage.app",
+  messagingSenderId: "742140044633",
+  appId: "1:742140044633:web:36cb08ff2aafc23c111848"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
@@ -80,6 +84,6 @@ window.vote = async (id, votes) => {
 
 loadNotes();
 </script>
-
+<p> by md tanvir rahman</p>
 </body>
 </html>
