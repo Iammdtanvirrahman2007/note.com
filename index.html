@@ -2,19 +2,87 @@
 <html>
 <head>
   <title>Note Competition</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      margin: 0;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    textarea {
+      width: 80%;
+      height: 100px;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    #notes {
+      width: 80%;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+
+    .username {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .vote-btn {
+      background: #2196F3;
+    }
+
+    .vote-btn:hover {
+      background: #1976D2;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>Note Competition</h1>
+<h1>🏆 Note Competition</h1>
 
-<button onclick="login()">Login with Google</button>
+<button onclick="login()">🔐 Login with Google</button>
 
-<h2>Submit Note</h2>
-<textarea id="note" placeholder="Write your note"></textarea>
+<h2>✍️ Submit Note</h2>
+<textarea id="note" placeholder="Write your best note..."></textarea>
 <br>
-<button onclick="submitNote()">Submit</button>
+<button onclick="submitNote()">🚀 Submit</button>
 
-<h2>All Notes</h2>
+<h2>📚 All Notes</h2>
 <div id="notes"></div>
 
 <script type="module">
@@ -22,7 +90,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBTDfFNbtXgf6I2OfwS_f6nCXLym2eSzc8",
   authDomain: "note-competition.firebaseapp.com",
@@ -38,7 +105,6 @@ const db = getFirestore();
 
 let user = null;
 
-// 🔐 Login
 window.login = async () => {
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopup(auth, provider);
@@ -46,7 +112,6 @@ window.login = async () => {
   alert("Logged in as " + user.displayName);
 };
 
-// ✍️ Submit note
 window.submitNote = async () => {
   const text = document.getElementById("note").value;
 
@@ -65,7 +130,6 @@ window.submitNote = async () => {
   loadNotes();
 };
 
-// 📥 Load notes
 async function loadNotes() {
   const querySnapshot = await getDocs(collection(db, "notes"));
   const notesDiv = document.getElementById("notes");
@@ -74,21 +138,20 @@ async function loadNotes() {
   querySnapshot.forEach((docSnap) => {
     const data = docSnap.data();
     const div = document.createElement("div");
+    div.className = "card";
 
     div.innerHTML = `
-      <p><b>${data.user || "Unknown"}</b></p>
+      <p class="username">👤 ${data.user || "Unknown"}</p>
       <p>${data.text}</p>
-      <button onclick="vote('${docSnap.id}')">
-        Vote (${data.votes || 0})
+      <button class="vote-btn" onclick="vote('${docSnap.id}')">
+        👍 Vote (${data.votes || 0})
       </button>
-      <hr>
     `;
 
     notesDiv.appendChild(div);
   });
 }
 
-// 👍 Vote system
 window.vote = async (id) => {
   const ref = doc(db, "notes", id);
   await updateDoc(ref, {
@@ -97,11 +160,10 @@ window.vote = async (id) => {
   loadNotes();
 };
 
-// প্রথম load
 loadNotes();
 </script>
 
-<p>by md tanvir rahman</p>
-
 </body>
 </html>
+
+
