@@ -2,17 +2,37 @@
 <html>
 <head>
   <title>App</title>
+
+  <style>
+    body { font-family: Arial; background:#f4f6f9; text-align:center; }
+
+    .nav {
+      background:#333;
+      color:white;
+      padding:10px;
+    }
+
+    .card {
+      background:white;
+      margin:10px;
+      padding:10px;
+      border-radius:8px;
+    }
+
+    button { margin:5px; }
+  </style>
 </head>
+
 <body>
 
 <!-- 🔷 NAVBAR -->
-<div style="background:#333; color:white; padding:10px;">
+<div class="nav">
   <span id="userName"></span>
   <button onclick="logout()" style="float:right;">Logout</button>
 </div>
 
 <h2>Submit Note</h2>
-<textarea id="note"></textarea><br>
+<textarea id="note" placeholder="Write something..."></textarea><br>
 <button onclick="submitNote()">Submit</button>
 
 <h2>All Notes</h2>
@@ -20,21 +40,39 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { 
+  getFirestore, collection, addDoc, getDocs, 
+  updateDoc, deleteDoc, doc 
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const firebaseConfig = { /* same config */ };
+import { 
+  getAuth, signInWithPopup, GoogleAuthProvider 
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+// ✅ তোমার config বসাও
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "note-competition.firebaseapp.com",
+  projectId: "note-competition",
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
+const auth = getAuth();
 
 // 🔐 check login
 const nickname = localStorage.getItem("nickname");
+const email = localStorage.getItem("email");
 
 if (!nickname) {
   window.location.href = "index.html";
 }
 
+// 👤 show name
 document.getElementById("userName").innerText = "👤 " + nickname;
+
+// 🔑 admin email
+const ADMIN_EMAIL = "mdtanvirrahman2021a@gmail.com";
 
 // logout
 window.logout = () => {
@@ -42,15 +80,22 @@ window.logout = () => {
   window.location.href = "index.html";
 };
 
-// submit
+// submit note
 window.submitNote = async () => {
   const text = document.getElementById("note").value;
 
+  if (!text) {
+    alert("Note empty!");
+    return;
+  }
+
   await addDoc(collection(db, "notes"), {
     text: text,
-    user: nickname
+    user: nickname,
+    votes: 0
   });
 
+  document.getElementById("note").value = "";
   loadNotes();
 };
 
@@ -60,14 +105,46 @@ async function loadNotes() {
   const div = document.getElementById("notes");
   div.innerHTML = "";
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+
+    let deleteBtn = "";
+
+    // 👑 admin only delete button
+    if (email === ADMIN_EMAIL) {
+      deleteBtn = `<button onclick="deleteNote('${docSnap.id}')">❌ Delete</button>`;
+    }
+
     div.innerHTML += `
-      <p><b>${data.user}</b>: ${data.text}</p>
-      <hr>
+      <div class="card">
+        <b>${data.user}</b>
+        <p>${data.text}</p>
+
+        <button onclick="vote('${docSnap.id}', ${data.votes})">
+          👍 Vote (${data.votes})
+        </button>
+
+        ${deleteBtn}
+      </div>
     `;
   });
 }
+
+// 👍 vote
+window.vote = async (id, votes) => {
+  const ref = doc(db, "notes", id);
+  await updateDoc(ref, { votes: votes + 1 });
+  loadNotes();
+};
+
+// ❌ delete
+window.deleteNote = async (id) => {
+  if (!confirm("Delete this note?")) return;
+
+  const ref = doc(db, "notes", id);
+  await deleteDoc(ref);
+  loadNotes();
+};
 
 loadNotes();
 </script>
