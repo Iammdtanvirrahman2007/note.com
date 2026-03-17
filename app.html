@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>App</title>
+</head>
+<body>
+
+<!-- 🔷 NAVBAR -->
+<div style="background:#333; color:white; padding:10px;">
+  <span id="userName"></span>
+  <button onclick="logout()" style="float:right;">Logout</button>
+</div>
+
+<h2>Submit Note</h2>
+<textarea id="note"></textarea><br>
+<button onclick="submitNote()">Submit</button>
+
+<h2>All Notes</h2>
+<div id="notes"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = { /* same config */ };
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore();
+
+// 🔐 check login
+const nickname = localStorage.getItem("nickname");
+
+if (!nickname) {
+  window.location.href = "index.html";
+}
+
+document.getElementById("userName").innerText = "👤 " + nickname;
+
+// logout
+window.logout = () => {
+  localStorage.clear();
+  window.location.href = "index.html";
+};
+
+// submit
+window.submitNote = async () => {
+  const text = document.getElementById("note").value;
+
+  await addDoc(collection(db, "notes"), {
+    text: text,
+    user: nickname
+  });
+
+  loadNotes();
+};
+
+// load notes
+async function loadNotes() {
+  const snapshot = await getDocs(collection(db, "notes"));
+  const div = document.getElementById("notes");
+  div.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    div.innerHTML += `
+      <p><b>${data.user}</b>: ${data.text}</p>
+      <hr>
+    `;
+  });
+}
+
+loadNotes();
+</script>
+
+</body>
+</html>
