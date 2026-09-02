@@ -10,12 +10,25 @@
 <div class="app" id="app">
 <aside class="sidebar" id="sidebar">
  <div class="sideHead">
-  <div class="brandLine"><div class="brand">Messenger</div><div class="brandBtns"><button class="circleBtn" id="newChat" title="New chat">✎</button><button class="circleBtn" id="themeHome" title="Theme">🎨</button></div></div>
+  <div class="brandLine">
+   <div class="brand">Messenger</div>
+   <div class="brandBtns">
+    <button class="circleBtn" id="newChat" title="New chat">✎</button>
+    <button class="circleBtn" id="mediaBtn" title="Media">🖼️</button>
+    <button class="circleBtn" id="themeHome" title="Theme">🎨</button>
+    <details class="moreMenu">
+     <summary class="circleBtn" title="Menu">☰</summary>
+     <div class="moreMenuPanel">
+      <a href="admin.html">🛡️ Admin Panel</a>
+      <button id="logout" class="logout">🚪 Logout</button>
+     </div>
+    </details>
+   </div>
+  </div>
   <div class="search"><input id="search" placeholder="🔎 Search chats"></div>
  </div>
- <div class="online" id="online"></div>
+ <div class="online" id="online" aria-hidden="true"></div>
  <div class="chatList" id="chatList"><div class="empty">Loading chats…</div></div>
- <div class="bottom"><a href="admin.html">🛡️ Admin</a><button id="mediaBtn">🖼️ Media</button><button id="logout" class="logout">Logout</button></div>
 </aside>
 <main class="main" id="main">
  <header class="top"><div class="topLeft"><button class="iconBtn backBtn" id="back">‹</button><div id="topAvatar" class="topAvatar">👥</div><div><h2 id="title">Everyone</h2><small id="subtitle">Group chat</small></div></div><button class="iconBtn" id="themeBtn">🎨 <span class="themeText">Theme</span></button></header>
