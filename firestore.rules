@@ -5,10 +5,21 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+
     function admin() {
       return signedIn()
-        && request.auth.token.email == 'mdtanvirrahman2021a@gmail.com'
+        && request.auth.token.email == 'mdtanvirrahman2021@gmail.com'
         && request.auth.token.email_verified == true;
+    }
+
+    function messageMember(chatId) {
+      return chatId == 'global'
+        || request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+    }
+
+    function withinEditWindow() {
+      return resource.data.createdAt != null
+        && request.time < resource.data.createdAt + duration.value(10, 'm');
     }
 
     match /users/{userId} {
@@ -51,19 +62,27 @@ service cloud.firestore {
       );
 
       match /messages/{messageId} {
-        allow read, delete: if admin();
-        allow read: if signedIn() && (
-          chatId == 'global' ||
-          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
-        );
-        allow create: if signedIn() && (
-          chatId == 'global' ||
-          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
-        ) && request.resource.data.sender == request.auth.uid;
+        allow read: if admin();
+        allow read: if signedIn() && messageMember(chatId);
+
+        allow create: if signedIn()
+          && messageMember(chatId)
+          && request.resource.data.sender == request.auth.uid
+          && request.resource.data.createdAt != null;
+
+        // Admin can edit/delete any message at any time.
+        // Normal users can edit/delete only their own message for 10 minutes.
         allow update: if admin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
           && request.resource.data.sender == resource.data.sender
+          && withinEditWindow()
+        );
+
+        allow delete: if admin() || (
+          signedIn()
+          && request.auth.uid == resource.data.sender
+          && withinEditWindow()
         );
       }
     }
