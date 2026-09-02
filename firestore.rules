@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function admin() {
+    function isAdmin() {
       return signedIn()
         && request.auth.token.email == 'mdtanvirrahman2021@gmail.com'
         && request.auth.token.email_verified == true;
@@ -25,61 +25,56 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == userId;
-      allow update: if admin() || (
+      allow update: if isAdmin() || (
         signedIn()
         && request.auth.uid == userId
         && request.resource.data.kicked == resource.data.kicked
       );
-      allow delete: if admin();
+      allow delete: if isAdmin();
     }
 
     match /nicknames/{nicknameKey} {
       allow read: if signedIn();
       allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid
-        && !exists(/databases/$(database)/documents/nicknames/$(nicknameKey));
-      allow update: if admin() || (
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin() || (
         signedIn()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == resource.data.uid
       );
-      allow delete: if admin();
+      allow delete: if isAdmin();
     }
 
     match /chats/{chatId} {
-      allow read, write: if admin();
-      allow read: if signedIn() && (
-        chatId == 'global' ||
-        request.auth.uid in resource.data.members
-      );
+      allow read: if signedIn();
       allow create: if signedIn() && (
         chatId == 'global' ||
         request.auth.uid in request.resource.data.members
       );
-      allow update: if signedIn() && (
-        chatId == 'global' ||
-        request.auth.uid in resource.data.members
+      allow update: if isAdmin() || (
+        signedIn() && (
+          chatId == 'global' ||
+          request.auth.uid in resource.data.members
+        )
       );
+      allow delete: if isAdmin();
 
       match /messages/{messageId} {
-        allow read: if admin();
-        allow read: if signedIn() && messageMember(chatId);
+        allow read: if isAdmin() || (signedIn() && messageMember(chatId));
 
         allow create: if signedIn()
           && messageMember(chatId)
           && request.resource.data.sender == request.auth.uid
           && request.resource.data.createdAt != null;
 
-        // Admin can edit/delete any message at any time.
-        // Normal users can edit/delete only their own message for 10 minutes.
-        allow update: if admin() || (
+        allow update: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
           && request.resource.data.sender == resource.data.sender
           && withinEditWindow()
         );
 
-        allow delete: if admin() || (
+        allow delete: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
           && withinEditWindow()
