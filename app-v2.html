@@ -34,8 +34,8 @@
 <main class="main" id="main">
  <header class="top"><div class="topLeft"><button class="iconBtn backBtn" id="back">‹</button><div id="topAvatar" class="topAvatar">👥</div><div><h2 id="title">Everyone</h2><small id="subtitle">Group chat</small></div></div><button class="iconBtn" id="themeBtn">🎨 <span class="themeText">Theme</span></button></header>
  <section class="content">
-  <div id="chatView" style="display:flex;flex:1;min-height:0;flex-direction:column"><div class="messages" id="messages"><div class="empty">Choose a chat to start messaging.</div></div><div class="composer" id="composer"><input id="message" maxlength="2000" autocomplete="off" placeholder="Message everyone…"><button id="send">Send</button></div></div>
-  <div id="mediaView" class="mediaView"><div style="color:#9aa6bd;margin-bottom:12px;font-size:13px">📁 Images from GitHub <b>media/</b></div><div class="gallery" id="gallery"></div></div>
+  <div id="chatView" style="display:flex;flex:1;min-height:0;flex-direction:column"><div class="messages" id="messages"><div class="empty">Choose a chat to start messaging.</div></div><div class="composer" id="composer"><button id="attachFile" class="iconBtn" title="Send image or file" type="button">📎</button><input id="message" maxlength="2000" autocomplete="off" placeholder="Message everyone…"><button id="send">Send</button></div></div>
+  <div id="mediaView" class="mediaView"><div class="empty">Google Drive media is loading…</div></div>
  </section>
 </main>
 </div>
@@ -45,5 +45,6 @@
 document.addEventListener('click',function(e){const menu=document.querySelector('.moreMenu');if(menu && !menu.contains(e.target)) menu.removeAttribute('open');});
 </script>
 <script type="module" src="js/messenger.js"></script>
+<script type="module" src="js/drive-files.js"></script>
 </body>
 </html>
