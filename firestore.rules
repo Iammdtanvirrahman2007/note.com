@@ -2,6 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
@@ -22,51 +23,87 @@ service cloud.firestore {
         && request.time < resource.data.createdAt + duration.value(10, 'm');
     }
 
+    // =========================
+    // USERS
+    // =========================
     match /users/{userId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.auth.uid == userId;
+
+      allow create: if signedIn()
+        && request.auth.uid == userId;
+
+      // A normal user may update their own profile fields,
+      // but may never change the kicked flag.
+      // If the old document has no kicked field yet, the update is allowed.
       allow update: if isAdmin() || (
         signedIn()
         && request.auth.uid == userId
-        && request.resource.data.kicked == resource.data.kicked
+        && request.resource.data.uid == resource.data.uid
+        && (
+          !('kicked' in resource.data)
+          || (
+            'kicked' in request.resource.data
+            && request.resource.data.kicked == resource.data.kicked
+          )
+        )
       );
+
       allow delete: if isAdmin();
     }
 
+    // =========================
+    // UNIQUE NICKNAMES
+    // =========================
     match /nicknames/{nicknameKey} {
       allow read: if signedIn();
+
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;
+
       allow update: if isAdmin() || (
         signedIn()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == resource.data.uid
       );
+
       allow delete: if isAdmin();
     }
 
+    // =========================
+    // CHATS
+    // =========================
     match /chats/{chatId} {
       allow read: if signedIn();
+
       allow create: if signedIn() && (
-        chatId == 'global' ||
-        request.auth.uid in request.resource.data.members
+        chatId == 'global'
+        || request.auth.uid in request.resource.data.members
       );
+
       allow update: if isAdmin() || (
         signedIn() && (
-          chatId == 'global' ||
-          request.auth.uid in resource.data.members
+          chatId == 'global'
+          || request.auth.uid in resource.data.members
         )
       );
+
       allow delete: if isAdmin();
 
+      // =========================
+      // MESSAGES
+      // =========================
       match /messages/{messageId} {
-        allow read: if isAdmin() || (signedIn() && messageMember(chatId));
+        allow read: if isAdmin() || (
+          signedIn() && messageMember(chatId)
+        );
 
         allow create: if signedIn()
           && messageMember(chatId)
           && request.resource.data.sender == request.auth.uid
           && request.resource.data.createdAt != null;
 
+        // Own message: edit only within 10 minutes.
+        // Admin: unlimited.
         allow update: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
@@ -74,6 +111,8 @@ service cloud.firestore {
           && withinEditWindow()
         );
 
+        // Own message: unsend only within 10 minutes.
+        // Admin: unlimited.
         allow delete: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
