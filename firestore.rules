@@ -13,9 +13,15 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Safe membership check for private chats.
+    // If the chat document does not exist yet, opening an empty chat
+    // must not cause a permission error.
     function messageMember(chatId) {
       return chatId == 'global'
-        || request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        || (
+          exists(/databases/$(database)/documents/chats/$(chatId))
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
+        );
     }
 
     function withinEditWindow() {
@@ -32,9 +38,6 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == userId;
 
-      // A normal user may update their own profile fields,
-      // but may never change the kicked flag.
-      // If the old document has no kicked field yet, the update is allowed.
       allow update: if isAdmin() || (
         signedIn()
         && request.auth.uid == userId
@@ -102,8 +105,6 @@ service cloud.firestore {
           && request.resource.data.sender == request.auth.uid
           && request.resource.data.createdAt != null;
 
-        // Own message: edit only within 10 minutes.
-        // Admin: unlimited.
         allow update: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
@@ -111,8 +112,6 @@ service cloud.firestore {
           && withinEditWindow()
         );
 
-        // Own message: unsend only within 10 minutes.
-        // Admin: unlimited.
         allow delete: if isAdmin() || (
           signedIn()
           && request.auth.uid == resource.data.sender
