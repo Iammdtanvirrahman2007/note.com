@@ -9,19 +9,19 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn()
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
         && request.auth.token.email == 'mdtanvirrahman2021@gmail.com'
         && request.auth.token.email_verified == true;
     }
 
-    // Safe membership check for private chats.
-    // If the chat document does not exist yet, opening an empty chat
-    // must not cause a permission error.
     function messageMember(chatId) {
-      return chatId == 'global'
+      return signedIn() && (
+        chatId == 'global'
         || (
           exists(/databases/$(database)/documents/chats/$(chatId))
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
-        );
+        )
+      );
     }
 
     function withinEditWindow() {
@@ -29,17 +29,13 @@ service cloud.firestore {
         && request.time < resource.data.createdAt + duration.value(10, 'm');
     }
 
-    // =========================
-    // USERS
-    // =========================
     match /users/{userId} {
       allow read: if signedIn();
 
       allow create: if signedIn()
         && request.auth.uid == userId;
 
-      allow update: if isAdmin() || (
-        signedIn()
+      allow update: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.uid == resource.data.uid
         && (
@@ -49,32 +45,25 @@ service cloud.firestore {
             && request.resource.data.kicked == resource.data.kicked
           )
         )
-      );
+        || isAdmin();
 
       allow delete: if isAdmin();
     }
 
-    // =========================
-    // UNIQUE NICKNAMES
-    // =========================
     match /nicknames/{nicknameKey} {
       allow read: if signedIn();
 
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;
 
-      allow update: if isAdmin() || (
-        signedIn()
+      allow update: if signedIn()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == resource.data.uid
-      );
+        || isAdmin();
 
       allow delete: if isAdmin();
     }
 
-    // =========================
-    // CHATS
-    // =========================
     match /chats/{chatId} {
       allow read: if signedIn();
 
@@ -92,13 +81,8 @@ service cloud.firestore {
 
       allow delete: if isAdmin();
 
-      // =========================
-      // MESSAGES
-      // =========================
       match /messages/{messageId} {
-        allow read: if isAdmin() || (
-          signedIn() && messageMember(chatId)
-        );
+        allow read: if isAdmin() || messageMember(chatId);
 
         allow create: if signedIn()
           && messageMember(chatId)
