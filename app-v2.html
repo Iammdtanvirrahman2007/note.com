@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tanmira Chat</title>
 <link rel="stylesheet" href="css/messenger.css">
+<style>
+@media(max-width:760px){
+  .composer{position:fixed;left:0;right:0;bottom:var(--keyboard-bottom,0px);z-index:25}
+  .content{padding-bottom:64px}
+  .messages{padding-bottom:18px}
+}
+</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -41,6 +48,22 @@
 </div>
 <div class="menuModal" id="rowMenuBack"><div class="actionSheet" id="rowMenu"></div></div>
 <div class="modal" id="themeModal"><div class="modalCard"><div class="modalHead"><h3>🎨 Personal Chat Theme</h3><button class="close" id="closeTheme">✕</button></div><p style="color:#8f9ab6;font-size:12px">Only you see this theme. It is saved on this device.</p><div class="presets"><button class="preset" data-t="midnight" style="background:#202633">Midnight</button><button class="preset" data-t="ocean" style="background:#123b56">Ocean</button><button class="preset" data-t="forest" style="background:#173d32">Forest</button><button class="preset" data-t="sunset" style="background:#4b2b25">Sunset</button><button class="preset" data-t="rose" style="background:#4b2638">Rose</button><button class="preset" data-t="lavender" style="background:#38305b">Lavender</button></div><div class="colors"><div class="colorBox"><label>Chat bubble</label><input type="color" id="bubbleColor"></div><div class="colorBox"><label>Message text</label><input type="color" id="textColor"></div><div class="colorBox"><label>My bubble</label><input type="color" id="mineColor"></div><div class="colorBox"><label>Accent</label><input type="color" id="accentColor"></div></div><div class="hint">Theme settings are personal and stored on this device.</div></div></div>
+<script>
+(function(){
+  function updateKeyboardOffset(){
+    if(!window.visualViewport)return;
+    const vv=window.visualViewport;
+    const bottom=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    document.documentElement.style.setProperty('--keyboard-bottom',bottom+'px');
+  }
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize',updateKeyboardOffset);
+    visualViewport.addEventListener('scroll',updateKeyboardOffset);
+  }
+  window.addEventListener('resize',updateKeyboardOffset);
+  updateKeyboardOffset();
+})();
+</script>
 <script type="module" src="js/messenger.js"></script>
 </body>
 </html>
